@@ -14,10 +14,11 @@ export const Polaroid: React.FC<PolaroidProps> = ({ photo, onDelete }) => {
 
   // Trigger the developing effect on mount
   useEffect(() => {
-    // Start the developing process slightly after mount
+    // Start the developing process. 
+    // The photo starts dark/blurry and slowly resolves.
     const timer = setTimeout(() => {
       setIsDeveloped(true);
-    }, 100);
+    }, 500); // Start developing shortly after ejection starts
     return () => clearTimeout(timer);
   }, []);
 
@@ -34,8 +35,6 @@ export const Polaroid: React.FC<PolaroidProps> = ({ photo, onDelete }) => {
     // Draw background
     ctx.fillStyle = '#ffffff';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
-    
-    // Draw texture (subtle noise) - optional, skipping for performance/simplicity
     
     // Load image
     const img = new Image();
@@ -62,28 +61,42 @@ export const Polaroid: React.FC<PolaroidProps> = ({ photo, onDelete }) => {
     link.click();
   };
 
+  // Camera slot calculation for "Start" position.
+  // Camera is bottom-left. Center X approx 192px. 
+  // Photo width 240px. Left = 192 - 120 = 72px.
+  // Camera top edge approx windowHeight - 480px.
+  // We spawn deep inside the camera.
+  const startX = 72;
+  const startY = typeof window !== 'undefined' ? window.innerHeight - 300 : 0;
+
   return (
     <motion.div
       layoutId={photo.id}
-      // Restore previous entrance animation
       initial={{ 
+        x: startX, 
+        y: startY, 
+        rotate: 0, 
+        scale: 0.9, 
+        zIndex: 20 // Behind camera (which is z-50)
+      }}
+      animate={{ 
         x: photo.x, 
         y: photo.y, 
         rotate: photo.rotation, 
-        scale: 0.8, 
-        opacity: 0 
+        scale: 1,
+        zIndex: 20 // Stays relatively low until dragged
       }}
-      animate={{ 
-        scale: 1, 
-        opacity: 1,
+      transition={{
+        duration: 1.8, // Slow mechanical ejection
+        ease: [0.2, 0.8, 0.2, 1], // Custom ease for "pushing out" feel
       }}
       drag
       dragMomentum={false}
-      whileDrag={{ scale: 1.1, zIndex: 100, rotate: 0, cursor: 'grabbing' }}
-      whileHover={{ scale: 1.02, zIndex: 50, cursor: 'grab' }}
+      whileDrag={{ scale: 1.05, zIndex: 100, rotate: 0, cursor: 'grabbing' }}
+      whileHover={{ scale: 1.02, zIndex: 60, cursor: 'grab' }}
       onHoverStart={() => setIsHovered(true)}
       onHoverEnd={() => setIsHovered(false)}
-      className="absolute flex flex-col items-center bg-white p-3 pb-8 shadow-xl"
+      className="absolute flex flex-col items-center bg-white p-3 pb-8 shadow-xl origin-bottom"
       style={{
         width: '240px',
         height: '290px',
@@ -98,14 +111,19 @@ export const Polaroid: React.FC<PolaroidProps> = ({ photo, onDelete }) => {
           alt="Polaroid"
           className={`w-full h-full object-cover transition-all duration-[5000ms] ease-out ${
             isDeveloped 
-              ? 'brightness-100 blur-0 grayscale-0 contrast-100' 
-              : 'brightness-[0.2] blur-[4px] grayscale-[0.8] contrast-[1.5]'
+              ? 'brightness-100 blur-0 grayscale-0 contrast-100 sepia-[0.2]' 
+              : 'brightness-[0.1] blur-[8px] grayscale-[0.8] contrast-[2] sepia-[0.6]'
           }`}
           draggable={false}
         />
         
         {/* Glossy Overlay Reflection */}
         <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/10 to-transparent pointer-events-none" />
+        
+        {/* Developing Chemistry Texture (Subtle pattern overlay while developing) */}
+        {!isDeveloped && (
+            <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 mix-blend-overlay"></div>
+        )}
       </div>
 
       {/* Handwritten Label placeholder or Timestamp */}

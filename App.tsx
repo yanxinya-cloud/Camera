@@ -8,16 +8,25 @@ const App: React.FC = () => {
   const [photos, setPhotos] = useState<PolaroidPhoto[]>([]);
 
   const handlePhotoTaken = (dataUrl: string) => {
-    // Reverted calculation logic
+    // Randomize final position on the wall
+    // Target X: roughly above the camera but slightly scattered
+    // Camera Center X is ~192px. Photo Width 240px. 
+    // Left edge ~ 72px.
+    const targetX = 72 + (Math.random() * 40 - 20); 
+    
+    // Target Y: Clear of the camera body. 
+    // Camera top is approx 500px from bottom.
+    // Window Height - 600px puts it safely above.
+    const targetY = window.innerHeight - 600 - (Math.random() * 50);
+
     const randomRotation = Math.random() * 6 - 3; 
     
     const newPhoto: PolaroidPhoto = {
       id: Date.now().toString(),
       dataUrl,
       timestamp: Date.now(),
-      // Revert Y position to original lower value (approx 450px from bottom)
-      x: 72 + (Math.random() * 10 - 5), 
-      y: window.innerHeight - 450 - (Math.random() * 20),
+      x: targetX, 
+      y: targetY,
       rotation: randomRotation,
     };
 
@@ -60,7 +69,7 @@ const App: React.FC = () => {
         </div>
       </div>
 
-      {/* Photo Wall Area */}
+      {/* Photo Wall Area - z-index 10 is behind camera (50) */}
       <div className="absolute inset-0 z-10">
         {photos.map((photo) => (
           <Polaroid 
@@ -71,7 +80,7 @@ const App: React.FC = () => {
         ))}
       </div>
 
-      {/* Camera UI Fixed to Bottom Left */}
+      {/* Camera UI Fixed to Bottom Left - z-index 50 to cover spawning photos */}
       <div className="absolute bottom-8 left-8 z-50">
         <RetroCamera onPhotoTaken={handlePhotoTaken} />
       </div>

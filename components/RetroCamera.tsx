@@ -1,8 +1,6 @@
 import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 import { Camera, Aperture } from 'lucide-react';
 import { useCamera } from '../hooks/useCamera';
-import { PolaroidPhoto } from '../types';
 
 interface RetroCameraProps {
   onPhotoTaken: (photoDataUrl: string) => void;
@@ -11,58 +9,38 @@ interface RetroCameraProps {
 export const RetroCamera: React.FC<RetroCameraProps> = ({ onPhotoTaken }) => {
   const { videoRef, captureImage, hasStream, isLoading } = useCamera();
   const [isFlashing, setIsFlashing] = useState(false);
-  const [ejectingPhoto, setEjectingPhoto] = useState<string | null>(null);
+  const [isProcessing, setIsProcessing] = useState(false);
 
   const handleShutter = () => {
-    if (!hasStream || ejectingPhoto) return; // Prevent double click while ejecting
+    if (!hasStream || isProcessing) return; 
 
-    // 1. Flash Effect
+    setIsProcessing(true);
     setIsFlashing(true);
-    setTimeout(() => setIsFlashing(false), 150);
+    
+    // 1. Flash duration
+    setTimeout(() => {
+        setIsFlashing(false);
+    }, 150);
 
-    // 2. Capture Logic
-    const dataUrl = captureImage();
-    if (dataUrl) {
-      // 3. Start Ejection Animation
-      setEjectingPhoto(dataUrl);
-
-      // 4. After ejection animation is done, hand it off to the parent
-      setTimeout(() => {
-        onPhotoTaken(dataUrl);
-        setEjectingPhoto(null);
-      }, 1500); // Matches the animation duration
-    }
+    // 2. Capture and notify
+    // We delay slightly to match the flash peak or just trigger it.
+    // Triggering immediately allows the photo to start emerging as flash fades.
+    setTimeout(() => {
+        const dataUrl = captureImage();
+        if (dataUrl) {
+            onPhotoTaken(dataUrl);
+        }
+        
+        // Cooldown before next shot allowed
+        setTimeout(() => {
+            setIsProcessing(false);
+        }, 1000);
+    }, 200);
   };
 
   return (
     <div className="relative w-[320px] z-50">
       
-      {/* EJECTING PHOTO LAYER (Behind the camera body but moving up) */}
-      <div className="absolute top-0 left-0 w-full h-full flex justify-center pointer-events-none overflow-visible">
-        <AnimatePresence>
-          {ejectingPhoto && (
-            <motion.div
-              initial={{ y: 80, opacity: 0 }} // Start slightly inside
-              animate={{ y: -220, opacity: 1 }} // Move UP out of the camera
-              exit={{ opacity: 0 }} // Revert: Fade out on exit
-              transition={{ 
-                duration: 1.5, 
-                ease: "easeOut" 
-              }}
-              className="absolute z-[-1] w-[200px] h-[240px] bg-white p-2 pb-6 shadow-md"
-            >
-              <div className="w-full h-full bg-gray-900 overflow-hidden">
-                <img 
-                   src={ejectingPhoto} 
-                   alt="Developing" 
-                   className="w-full h-full object-cover opacity-80 blur-sm brightness-50"
-                />
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
-
       {/* CAMERA BODY */}
       <div className="relative bg-gradient-to-b from-stone-100 to-stone-200 rounded-[3rem] p-6 shadow-[0_20px_50px_rgba(0,0,0,0.3)] border-b-8 border-stone-300">
         
@@ -120,11 +98,11 @@ export const RetroCamera: React.FC<RetroCameraProps> = ({ onPhotoTaken }) => {
           {/* Shutter Button */}
           <button
             onClick={handleShutter}
-            disabled={!hasStream || !!ejectingPhoto}
+            disabled={!hasStream || isProcessing}
             className={`
               w-16 h-16 rounded-full border-4 border-stone-300 shadow-lg
               flex items-center justify-center transition-all active:scale-95
-              ${ejectingPhoto ? 'bg-red-300 cursor-wait' : 'bg-red-500 hover:bg-red-600 cursor-pointer'}
+              ${isProcessing ? 'bg-red-300 cursor-wait' : 'bg-red-500 hover:bg-red-600 cursor-pointer'}
             `}
             aria-label="Take Photo"
           >
@@ -136,7 +114,7 @@ export const RetroCamera: React.FC<RetroCameraProps> = ({ onPhotoTaken }) => {
         </div>
 
         {/* Output Slot Visualization */}
-        <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-48 h-2 bg-black/20 rounded-full" />
+        <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-56 h-3 bg-stone-800/20 rounded-full shadow-inner" />
       </div>
     </div>
   );
