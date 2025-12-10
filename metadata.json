@@ -1,0 +1,7 @@
+{
+  "name": "RetroInsta Cam",
+  "description": "A nostalgic polaroid camera experience in your browser. Snap, watch them develop, and arrange your memory wall.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
