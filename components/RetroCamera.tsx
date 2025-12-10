@@ -44,10 +44,10 @@ export const RetroCamera: React.FC<RetroCameraProps> = ({ onPhotoTaken }) => {
             <motion.div
               initial={{ y: 80, opacity: 0 }} // Start slightly inside
               animate={{ y: -220, opacity: 1 }} // Move UP out of the camera
-              exit={{ opacity: 0 }} // Fade out when handed off (optional, instant removal is fine too)
+              exit={{ opacity: 0 }} // Revert: Fade out on exit
               transition={{ 
                 duration: 1.5, 
-                ease: [0.2, 0.8, 0.2, 1] // Custom ease for "mechanical" feel
+                ease: "easeOut" 
               }}
               className="absolute z-[-1] w-[200px] h-[240px] bg-white p-2 pb-6 shadow-md"
             >

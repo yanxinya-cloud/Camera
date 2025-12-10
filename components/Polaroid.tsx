@@ -65,6 +65,7 @@ export const Polaroid: React.FC<PolaroidProps> = ({ photo, onDelete }) => {
   return (
     <motion.div
       layoutId={photo.id}
+      // Restore previous entrance animation
       initial={{ 
         x: photo.x, 
         y: photo.y, 
@@ -75,7 +76,6 @@ export const Polaroid: React.FC<PolaroidProps> = ({ photo, onDelete }) => {
       animate={{ 
         scale: 1, 
         opacity: 1,
-        transition: { duration: 0.4 } // Pop onto the wall
       }}
       drag
       dragMomentum={false}

@@ -8,21 +8,15 @@ const App: React.FC = () => {
   const [photos, setPhotos] = useState<PolaroidPhoto[]>([]);
 
   const handlePhotoTaken = (dataUrl: string) => {
-    // Calculate a position relative to where the camera ejects
-    // The camera is fixed at bottom-left. 
-    // Ejection happens approx 200px up from bottom, 100px from left.
-    // We want the new photo to appear "picked up" from there.
-    
-    // We'll place it slightly randomized on the "wall" (screen) to encourage dragging
-    const randomRotation = Math.random() * 10 - 5; // -5 to +5 degrees
+    // Reverted calculation logic
+    const randomRotation = Math.random() * 6 - 3; 
     
     const newPhoto: PolaroidPhoto = {
       id: Date.now().toString(),
       dataUrl,
       timestamp: Date.now(),
-      // Initial position matches roughly where the ejection animation ends
-      // The camera is bottom-left, so let's put it above the camera
-      x: 60 + (Math.random() * 40), 
+      // Revert Y position to original lower value (approx 450px from bottom)
+      x: 72 + (Math.random() * 10 - 5), 
       y: window.innerHeight - 450 - (Math.random() * 20),
       rotation: randomRotation,
     };
